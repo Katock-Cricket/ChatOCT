@@ -1,4 +1,21 @@
--r requirements/build.txt
--r requirements/optional.txt
--r requirements/runtime.txt
--r requirements/tests.txt
+cython
+numpy
+matplotlib
+mmpycocotools
+numpy
+six
+terminaltables
+timm
+
+opencv-python
+torch
+imageio
+scipy
+pycocotools
+Pillow
+scikit-learn
+gradio
+text2vec
+revChatGPT
+setuptools
+torchvision

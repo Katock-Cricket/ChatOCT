@@ -5,21 +5,6 @@ _base_ = [
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
 
-# model = dict(
-#     backbone=dict(
-#         embed_dim=96,
-#         depths=[2, 2, 6, 2],
-#         num_heads=[3, 6, 12, 24],
-#         window_size=7,
-#         ape=True,
-#         drop_path_rate=0.1,
-#         attn_drop_rate=0.,
-#         drop_rate=0.,
-#         patch_norm=True,
-#         use_checkpoint=False
-#     ),
-#     neck=dict(in_channels=[96, 192, 384, 768])
-#     )
 
 model = dict(
     backbone=dict(
