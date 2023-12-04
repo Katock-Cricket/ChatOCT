@@ -7,8 +7,8 @@ from OCT_Det.reprocess import generate_abstract
 
 device = "cuda:0"
 api_key = json.load(open('API_key.json', 'r', encoding='utf8'))['api_key']
-config = "configs/swin/gswin_oct.py"
-checkpoint = "checkpoints/gswin_transformer.pth"
+config = "./configs/swin/gswin_oct.py"
+checkpoint = "./checkpoints/gswin_transformer.pth"
 ChatBot = GPTBot(
     engine="gpt-3.5-turbo",
     api_key=api_key,
@@ -21,6 +21,7 @@ def analyse_oct(history, file):
     OCTDetector.reset()
     OCTDetector.load_oct(file.name)
     OCTDetector.inference()
+    OCTDetector.save_results()
     print("OCTDetector: ", OCTDetector.result)
     abstract = generate_abstract(OCTDetector.result)
     print("Abstract: ", abstract)

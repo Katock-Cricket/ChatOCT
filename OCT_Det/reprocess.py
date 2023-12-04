@@ -1,4 +1,3 @@
-from OCT_Det.utils import get_size, get_position
 
 
 class OCTClass:
@@ -35,7 +34,16 @@ class XS(OCTClass):
         return f"检测到血栓{self.num}处"
 
 
+def get_size(polygon):
+    return (polygon[2][0] - polygon[0][0]) * (polygon[2][1] - polygon[0][1])
+
+
+def get_position(polygon):
+    return (polygon[2][0] + polygon[0][0]) / 2, (polygon[2][1] + polygon[0][1]) / 2
+
+
 class OCTObject:
+
     def __init__(self, label, polygon):
         self.label = label
         self.body = [polygon]

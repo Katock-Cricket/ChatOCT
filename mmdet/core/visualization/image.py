@@ -126,14 +126,10 @@ def imshow_det_bboxes(img,
     polygons = []
     color = []
     for i, (bbox, label) in enumerate(zip(bboxes, labels)):
-        print("i: ", i)
-        print("label: ", class_names[label])
         bbox_int = bbox.astype(np.int32)
         poly = [[bbox_int[0], bbox_int[1]], [bbox_int[0], bbox_int[3]],
                 [bbox_int[2], bbox_int[3]], [bbox_int[2], bbox_int[1]]]
-        print("poly: ", poly)
         np_poly = np.array(poly).reshape((4, 2))
-        print("np_poly: ", np_poly)
         polygons.append(Polygon(np_poly))
         color.append(bbox_color)
         label_text = class_names[

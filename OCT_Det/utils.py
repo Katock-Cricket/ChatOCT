@@ -1,13 +1,18 @@
+import os
+
 import numpy as np
 from PIL import Image
 
 
-def get_size(polygon):
-    return (polygon[2][0] - polygon[0][0]) * (polygon[2][1] - polygon[0][1])
+def save_gif(img_dir, gif_path):
+    images = []
+    for filename in sorted(os.listdir(img_dir)):
+        if filename.endswith('.png'):
+            img_path = os.path.join(img_dir, filename)
+            img = Image.open(img_path)
+            images.append(img)
 
-
-def get_position(polygon):
-    return (polygon[2][0] + polygon[0][0])/2, (polygon[2][1] + polygon[0][1])/2
+    images[0].save(gif_path, save_all=True, append_images=images[1:], duration=100, loop=0)
 
 
 def resize_img(img_list):
