@@ -19,7 +19,7 @@ class OCTDetectModel:
         self.result_tuple = []
 
     def load_oct(self, file):
-        # TODO: 在此处嵌入utils编解码模块，file可以是.mp4，pngs.zip，先按照zip
+        # TODO: 在此处嵌入utils编解码模块，file可以是.mp4，pngs.zip，默认zip
         print("Loading file: ", file)
         if file.endswith('.zip'):
             with ZipFile(file, 'r') as zip_ref:

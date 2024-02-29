@@ -34,11 +34,15 @@ class GPTBot(BaseBot):
         message = ""
         it = 0
         while True:
+            if it >= 5:
+                raise RuntimeError("无法连接")
+
             it += 1
             print(f"第{it}次尝试...")
             try:
                 message = self.agent.ask(prompt)
-            except:
+            except Exception as e:
+                print(e)
                 time.sleep(10)
                 continue
             break

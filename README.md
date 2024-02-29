@@ -20,17 +20,26 @@ ChatOCT项目旨在将微调的LLM与现有的IVOCT检测模型结合，实现�
      pip install -r requirements.txt
      ```
 
-2. mmcv（1.2.4~1.4.0），参考官方说明
+2. 安装mmcv（1.2.4~1.4.0）
+     使用源码自行构建：https://github.com/open-mmlab/mmcv/tree/v1.3.17
 
-3. mmdet
+3. 安装mmdet（只能是该版本）
 
      ```
      pip install -v -e .
      ```
 
+4. ChatGPT连通性测试
+
+     ```shell
+     python -m revChatGPT --V3 --api_key $API_KEY
+     ```
+
+     API限额查询：https://gptbill.lonlie.cn/
+
 ## 数据&权重
 
-**IVOCT数据：**demo/demo.zip
+**IVOCT输入**：demo/demo.zip
 
 **gswin权重**：checkpoints/gswin_transformer.pth
 
