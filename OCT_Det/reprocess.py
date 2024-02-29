@@ -1,3 +1,5 @@
+import json
+from argparse import ArgumentParser
 
 
 class OCTClass:
@@ -107,4 +109,22 @@ def generate_abstract(oct_result):
         archive_obj(obj)
 
     abstract = f"{js}; {jc}; {xs}。"
+
+    with open(args.abstract_path, 'w', encoding='utf-8') as f:
+        f.write(abstract)
+        print("save abstract to ./result/abstract.txt")
+
     return abstract
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--result-path', default="./result/result.json", required=False, help='Result path')
+    parser.add_argument('--abstract-path', default="./result/abstract.txt", required=False, help='Abstract path')
+    args = parser.parse_args()
+
+    with open(args.result_path, 'r') as f:
+        result = json.load(f)
+
+    abstract = generate_abstract(result)
+

@@ -1,3 +1,4 @@
+import json
 import os
 
 import numpy as np
@@ -15,8 +16,7 @@ def save_gif(img_dir, gif_path):
     images[0].save(gif_path, save_all=True, append_images=images[1:], duration=100, loop=0)
 
 
-def resize_img(img_list):
-    for img_path in img_list:
+async def resize_img(img_path):
         img = Image.open(img_path)
         resized_img = img.resize((1000, 1000), Image.ANTIALIAS)
         resized_img.save(img_path)
@@ -43,3 +43,14 @@ def conv2polygon(model, bbox_result, score_thr):
                 [bbox_int[2], bbox_int[3]], [bbox_int[2], bbox_int[1]]]
         ret.append({"label": class_names[label], "poly": poly})
     return ret
+
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
