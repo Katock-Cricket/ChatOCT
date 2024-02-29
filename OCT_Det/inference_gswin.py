@@ -6,10 +6,10 @@ from argparse import ArgumentParser
 from OCT_Det.utils import conv2polygon, resize_img, save_gif, NpEncoder
 from mmdet.apis import inference_detector, init_detector, show_result_pyplot
 
-raw_path = "./raw"
-result_path = "./result"
-result_img_path = "./result/img"
-gif_path = "./result/result.gif"
+raw_path = "./OCT_Det/raw"
+result_path = "./OCT_Det/result"
+result_img_path = "./OCT_Det/result/img"
+gif_path = "./OCT_Det/result/result.gif"
 
 
 class OCTDetectModel:

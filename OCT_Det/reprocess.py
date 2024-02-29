@@ -17,7 +17,9 @@ class JS(OCTClass):
         super().__init__()
 
     def __str__(self):
-        return f"检测到巨噬细胞{self.num}处"
+        result = f"检测到巨噬细胞{self.num}处\n"
+
+        return result
 
 
 class JC(OCTClass):
@@ -25,7 +27,14 @@ class JC(OCTClass):
         super().__init__()
 
     def __str__(self):
-        return f"检测到空腔/裂隙{self.num}处"
+        result = f"检测到空腔/裂隙{self.num}处\n"
+        idx = 1
+        for obj in self.obj_list:
+            rate = obj.volume / (1000 * 1000) * 100
+            result += f"第{idx}处，约占血管截面积{rate}%\n"
+            idx += 1
+
+        return result
 
 
 class XS(OCTClass):
@@ -33,8 +42,14 @@ class XS(OCTClass):
         super().__init__()
 
     def __str__(self):
-        return f"检测到血栓{self.num}处"
+        result = f"检测到血栓{self.num}处\n"
+        idx = 1
+        for obj in self.obj_list:
+            rate = obj.volume / (1000 * 1000) * 100
+            result += f"第{idx}处，约占血管截面积{rate}%\n"
+            idx += 1
 
+        return result
 
 def get_size(polygon):
     return (polygon[2][0] - polygon[0][0]) * (polygon[2][1] - polygon[0][1])
@@ -50,10 +65,14 @@ class OCTObject:
         self.label = label
         self.body = [polygon]
         self.volume = get_size(polygon)
+        self.max_square = get_size(polygon)
+        self.length = 1
 
     def add_slice(self, polygon):
         self.body.append(polygon)
         self.volume += get_size(polygon)
+        self.max_square = max(self.max_square, get_size(polygon))
+        self.length += 1
 
     def avg_position(self):
         ret_x = 0
@@ -108,9 +127,9 @@ def generate_abstract(oct_result):
     for obj in obj_list:
         archive_obj(obj)
 
-    abstract = f"{js}; {jc}; {xs}。"
+    abstract = f"{js}\n{jc}\n{xs}"
 
-    with open(args.abstract_path, 'w', encoding='utf-8') as f:
+    with open("./OCT_Det/result/abstract.txt", 'w', encoding='utf-8') as f:
         f.write(abstract)
         print("save abstract to ./result/abstract.txt")
 
@@ -119,8 +138,7 @@ def generate_abstract(oct_result):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--result-path', default="./result/result.json", required=False, help='Result path')
-    parser.add_argument('--abstract-path', default="./result/abstract.txt", required=False, help='Abstract path')
+    parser.add_argument('--result-path', default="./OCT_Det/result/result.json", required=False, help='Result path')
     args = parser.parse_args()
 
     with open(args.result_path, 'r') as f:
