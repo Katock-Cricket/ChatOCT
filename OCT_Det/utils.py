@@ -16,9 +16,9 @@ def save_gif(img_dir, gif_path):
     images[0].save(gif_path, save_all=True, append_images=images[1:], duration=100, loop=0)
 
 
-async def resize_img(img_path):
+def resize_img(img_path, size):
         img = Image.open(img_path)
-        resized_img = img.resize((1000, 1000), Image.ANTIALIAS)
+        resized_img = img.resize((size, size), Image.ANTIALIAS)
         resized_img.save(img_path)
 
 

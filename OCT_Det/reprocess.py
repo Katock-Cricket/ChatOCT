@@ -18,9 +18,9 @@ class OCTClass:
             idx = 1
             for obj in self.obj_list:
                 rate = obj.max_square / actual_s
-                ret += f"第{idx}处，最大截面积约占血管{rate * 100}%，"
-                ret += f"长度约{obj.length}毫米，"
-                ret += f"体积约{obj.volume}立方毫米\n"
+                ret += f"第{idx}处，最大截面积约占血管{rate * 100:.2f}%，"
+                ret += f"长度约{obj.length:.2f}毫米，"
+                ret += f"体积约{obj.volume:.2f}立方毫米\n"
                 idx += 1
         return ret
 
@@ -58,7 +58,7 @@ class XS(OCTClass):
 
 
 interval = 0.1  # 实际扫描间隔/mm
-picture_s = 1000 * 1000  # 图片画幅面积/pixel
+picture_s = 575 * 575  # 图片画幅面积/pixel
 actual_s = 100  # 实际画幅面积/mm^2
 
 
@@ -96,7 +96,7 @@ class OCTObject:
         return ret_x, ret_y
 
 
-def is_same_obj(last_obj, obj, threshold=50):  # 默认前后两帧的位置差距小于50像素，则认为是同一个病灶
+def is_same_obj(last_obj, obj, threshold=25):  # 默认前后两帧的位置差距小于50像素，则认为是同一个病灶
     if last_obj.label != obj['label']:
         return False
     last_x, last_y = last_obj.avg_position()

@@ -1,7 +1,10 @@
 import json
+import multiprocessing
 import os
 from zipfile import ZipFile
 from argparse import ArgumentParser
+
+from tqdm import tqdm
 
 from OCT_Det.utils import conv2polygon, resize_img, save_gif, NpEncoder
 from mmdet.apis import inference_detector, init_detector, show_result_pyplot
@@ -32,8 +35,9 @@ class OCTDetectModel:
 
         for f in os.listdir(raw_path):
             if f.endswith('.png'):
-                self.img_list.append(os.path.join(raw_path, f))
-                resize_img(f)
+                img_path = os.path.join(raw_path, f)
+                self.img_list.append(img_path)
+                resize_img(img_path, 575)
 
         print("loaded_OCT:", self.img_list)
 
@@ -43,7 +47,7 @@ class OCTDetectModel:
         self.result_tuple = []
 
     def inference(self):
-        for img in self.img_list[1:-1]:
+        for img in tqdm(self.img_list[1:-1], desc='OCT处理进度', unit='img'):
             result_tensor = inference_detector(self.model, img)
             self.result_tuple.append((img, result_tensor))
             conv_result = conv2polygon(self.model, result_tensor, self.score_thr)
@@ -66,9 +70,9 @@ class OCTDetectModel:
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--oct', default="../demo/demo.zip", required=False, help='Image zip file')
-    parser.add_argument('--config', default="../configs/swin/gswin_oct.py", required=False, help='Config file')
-    parser.add_argument('--checkpoint', default="../checkpoints/gswin_transformer.pth", required=False, help='Ckpt')
+    parser.add_argument('--oct', default="./demo/demo.zip", required=False, help='Image zip file')
+    parser.add_argument('--config', default="./configs/swin/gswin_oct.py", required=False, help='Config file')
+    parser.add_argument('--checkpoint', default="./checkpoints/gswin_transformer.pth", required=False, help='Ckpt')
     parser.add_argument(
         '--device', default='cuda:0', required=False, help='Device used for inference')
     parser.add_argument(
