@@ -6,53 +6,64 @@ class OCTClass:
     def __init__(self):
         self.num = 0
         self.obj_list = []
+        self.class_name = ''
 
     def add_obj(self, obj):
         self.obj_list.append(obj)
         self.num += 1
 
+    def __str__(self):
+        ret = f"检测到{self.class_name}{self.num}处\n"
+        if not isinstance(self, JS):
+            idx = 1
+            for obj in self.obj_list:
+                rate = obj.max_square / actual_s
+                ret += f"第{idx}处，最大截面积约占血管{rate * 100}%，"
+                ret += f"长度约{obj.length}毫米，"
+                ret += f"体积约{obj.volume}立方毫米\n"
+                idx += 1
+        return ret
+
 
 class JS(OCTClass):
     def __init__(self):
         super().__init__()
+        self.class_name = '巨噬细胞'
 
     def __str__(self):
-        result = f"检测到巨噬细胞{self.num}处\n"
-
-        return result
+        ret = super().__str__()
+        return ret
 
 
 class JC(OCTClass):
     def __init__(self):
         super().__init__()
+        self.class_name = '夹层'
 
     def __str__(self):
-        result = f"检测到空腔/裂隙{self.num}处\n"
-        idx = 1
-        for obj in self.obj_list:
-            rate = obj.volume / (1000 * 1000) * 100
-            result += f"第{idx}处，约占血管截面积{rate}%\n"
-            idx += 1
+        ret = super().__str__()
 
-        return result
+        return ret
 
 
 class XS(OCTClass):
     def __init__(self):
         super().__init__()
+        self.class_name = '血栓'
 
     def __str__(self):
-        result = f"检测到血栓{self.num}处\n"
-        idx = 1
-        for obj in self.obj_list:
-            rate = obj.volume / (1000 * 1000) * 100
-            result += f"第{idx}处，约占血管截面积{rate}%\n"
-            idx += 1
+        ret = super().__str__()
 
-        return result
+        return ret
+
+
+interval = 0.1  # 实际扫描间隔/mm
+picture_s = 1000 * 1000  # 图片画幅面积/pixel
+actual_s = 100  # 实际画幅面积/mm^2
+
 
 def get_size(polygon):
-    return (polygon[2][0] - polygon[0][0]) * (polygon[2][1] - polygon[0][1])
+    return (polygon[2][0] - polygon[0][0]) * (polygon[2][1] - polygon[0][1]) * (actual_s / picture_s)
 
 
 def get_position(polygon):
@@ -60,19 +71,18 @@ def get_position(polygon):
 
 
 class OCTObject:
-
     def __init__(self, label, polygon):
         self.label = label
         self.body = [polygon]
         self.volume = get_size(polygon)
         self.max_square = get_size(polygon)
-        self.length = 1
+        self.length = 1 * interval
 
     def add_slice(self, polygon):
         self.body.append(polygon)
         self.volume += get_size(polygon)
         self.max_square = max(self.max_square, get_size(polygon))
-        self.length += 1
+        self.length += interval
 
     def avg_position(self):
         ret_x = 0
@@ -86,12 +96,12 @@ class OCTObject:
         return ret_x, ret_y
 
 
-def is_same_obj(last_obj, obj):
+def is_same_obj(last_obj, obj, threshold=50):  # 默认前后两帧的位置差距小于50像素，则认为是同一个病灶
     if last_obj.label != obj['label']:
         return False
     last_x, last_y = last_obj.avg_position()
     x, y = get_position(obj['poly'])
-    if abs(last_x - x) > 50 or abs(last_y - y) > 50:
+    if abs(last_x - x) > threshold or abs(last_y - y) > threshold:
         return False
 
     return True
@@ -145,4 +155,3 @@ if __name__ == '__main__':
         result = json.load(f)
 
     abstract = generate_abstract(result)
-
