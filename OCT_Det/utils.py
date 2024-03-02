@@ -22,7 +22,7 @@ def resize_img(img_path, size):
         resized_img.save(img_path)
 
 
-def conv2polygon(model, bbox_result, score_thr):
+def conv2polygon(model, bbox_result, idx, score_thr):
     class_names = model.CLASSES
     bboxes = np.vstack(bbox_result)
     labels = [
@@ -40,8 +40,8 @@ def conv2polygon(model, bbox_result, score_thr):
     for i, (bbox, label) in enumerate(zip(bboxes, labels)):
         bbox_int = bbox.astype(np.int32)
         poly = [[bbox_int[0], bbox_int[1]], [bbox_int[0], bbox_int[3]],
-                [bbox_int[2], bbox_int[3]], [bbox_int[2], bbox_int[1]]]
-        ret.append({"label": class_names[label], "poly": poly})
+                [bbox_int[2], bbox_int[3]], [bbox_int[2], bbox_int[1]], idx]  # idx相当于Z维度的位置
+        ret.append({"label": class_names[label], "poly": poly, "score": bbox[-1]})
     return ret
 
 

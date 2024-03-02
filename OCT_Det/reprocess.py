@@ -1,4 +1,7 @@
 import json
+
+import numpy as np
+from sklearn.cluster import DBSCAN
 from argparse import ArgumentParser
 
 
@@ -13,25 +16,61 @@ class OCTClass:
         self.num += 1
 
     def __str__(self):
-        ret = f"检测到{self.class_name}{self.num}处\n"
-        if not isinstance(self, JS):
-            idx = 1
-            for obj in self.obj_list:
-                rate = obj.max_square / actual_s
-                ret += f"第{idx}处，最大截面积约占血管{rate * 100:.2f}%，"
-                ret += f"长度约{obj.length:.2f}毫米，"
-                ret += f"体积约{obj.volume:.2f}立方毫米\n"
-                idx += 1
+        ret = f"检测到疑似{self.class_name}{self.num}处\n"
+        for idx, obj in enumerate(self.obj_list):
+            rate = obj.max_square / actual_s
+            ret += f"第{idx + 1}处，"
+            ret += f"置信度{obj.score * 100:.2f}%，"
+            ret += f"最大截面积约占血管{rate * 100:.2f}%，"
+            ret += f"长度约{obj.length:.2f}毫米，"
+            ret += f"体积约{obj.volume:.2f}立方毫米\n"
         return ret
 
 
 class JS(OCTClass):
+    class Cluster:
+        def __init__(self):
+            self.js_num = 0
+            self.js_list = []
+            self.score = 0
+
+        def add_js(self, js):
+            self.js_num += 1
+            self.js_list.append(js)
+            self.score = (self.score * (self.js_num - 1) + js[3]) / self.js_num
+
+        def __str__(self):
+            ret = f"含有巨噬细胞{self.js_num}个，"
+            ret += f"置信度{self.score * 100:.2f}%\n"
+            return ret
+
     def __init__(self):
         super().__init__()
         self.class_name = '巨噬细胞'
+        self.clusters = []
+
+    def do_cluster(self):
+        js_list = []
+        for obj in self.obj_list:
+            x_avg, y_avg, z_avg = obj.avg_position()
+            x, y, z = actual_position(x_avg, y_avg, z_avg)
+            js_list.append([x, y, z, obj.score])
+        points = np.array([[x, y, z] for x, y, z, _ in js_list])
+        print(js_list)
+        dbscan = DBSCAN(eps=2, min_samples=1)
+        labels = dbscan.fit_predict(points)
+        print(labels)
+        self.clusters = [None] * (max(labels) + 1)
+        for i, label in enumerate(labels):
+            if self.clusters[label] is None:
+                self.clusters[label] = JS.Cluster()
+            self.clusters[label].add_js(js_list[i])
 
     def __str__(self):
-        ret = super().__str__()
+        ret = f"发现巨噬细胞{len(self.clusters)}簇\n"
+        for idx, cluster in enumerate(self.clusters):
+            ret += f"第{idx + 1}簇"
+            ret += str(cluster)
         return ret
 
 
@@ -58,56 +97,65 @@ class XS(OCTClass):
 
 
 interval = 0.1  # 实际扫描间隔/mm
-picture_s = 575 * 575  # 图片画幅面积/pixel
-actual_s = 100  # 实际画幅面积/mm^2
+picture_width = 575  # 画面边长/pixel
+actual_width = 10  # 实际长度/mm
+picture_s = picture_width ** 2  # 图片画幅面积/pixel
+actual_s = actual_width ** 2  # 实际画幅面积/mm^2
 
 
 def get_size(polygon):
     return (polygon[2][0] - polygon[0][0]) * (polygon[2][1] - polygon[0][1]) * (actual_s / picture_s)
 
 
-def get_position(polygon):
-    return (polygon[2][0] + polygon[0][0]) / 2, (polygon[2][1] + polygon[0][1]) / 2
+def get_position(polygon):  # 获取obj切片的坐标
+    return (polygon[2][0] + polygon[0][0]) / 2, (polygon[2][1] + polygon[0][1]) / 2, polygon[4]
+
+
+def actual_position(x, y, z):  # 根据像素和扫描间距，计算实际坐标/mm
+    return x * (actual_width / picture_width), y * (actual_width / picture_width), z * interval
 
 
 class OCTObject:
-    def __init__(self, label, polygon):
+    def __init__(self, label, polygon, score):
         self.label = label
         self.body = [polygon]
+        self.score = score
         self.volume = get_size(polygon)
         self.max_square = get_size(polygon)
         self.length = 1 * interval
 
-    def add_slice(self, polygon):
+    def add_slice(self, polygon, score):
         self.body.append(polygon)
         self.volume += get_size(polygon)
         self.max_square = max(self.max_square, get_size(polygon))
+        self.score = (self.score * (len(self.body) - 1) + score) / len(self.body)
         self.length += interval
 
-    def avg_position(self):
+    def avg_position(self):  # 获取obj整体的三维坐标
         ret_x = 0
         ret_y = 0
+        ret_z = 0
         for polygon in self.body:
-            x, y = get_position(polygon)
+            x, y, z = get_position(polygon)
             ret_x += x
             ret_y += y
+            ret_z += z
         ret_x /= len(self.body)
         ret_y /= len(self.body)
-        return ret_x, ret_y
-
-
-def is_same_obj(last_obj, obj, threshold=25):  # 默认前后两帧的位置差距小于50像素，则认为是同一个病灶
-    if last_obj.label != obj['label']:
-        return False
-    last_x, last_y = last_obj.avg_position()
-    x, y = get_position(obj['poly'])
-    if abs(last_x - x) > threshold or abs(last_y - y) > threshold:
-        return False
-
-    return True
+        ret_z /= len(self.body)
+        return ret_x, ret_y, ret_z
 
 
 def generate_abstract(oct_result):
+    def is_same_obj(last_obj, obj, threshold=25):  # 默认前后两帧的位置差距小于thr像素，则认为是同一个病灶
+        if last_obj.label != obj['label']:
+            return False
+        last_x, last_y, last_z = last_obj.avg_position()
+        x, y, z = get_position(obj['poly'])
+        if abs(last_x - x) > threshold or abs(last_y - y) > threshold:  # 无须比较z，因为archive_list控制了z差值必相邻
+            return False
+        return True
+
     def archive_obj(obj):
         if obj.label == 'js':
             js.add_obj(obj)
@@ -116,6 +164,19 @@ def generate_abstract(oct_result):
         else:
             xs.add_obj(obj)
 
+    def try_add_obj(obj):
+        for last_obj in obj_list:
+            if is_same_obj(last_obj, obj):
+                last_obj.add_slice(obj['poly'], obj['score'])
+                return
+        obj_list.append(OCTObject(obj['label'], obj['poly'], obj['score']))
+
+    def archive_list(cur_z):
+        for obj in obj_list:
+            if abs(obj.body[-1][4] - cur_z) > 1:  # 清除掉已经不可能连起来的切片，全部当做单独的obj
+                archive_obj(obj)
+                obj_list.remove(obj)
+
     js = JS()
     jc = JC()
     xs = XS()
@@ -123,20 +184,17 @@ def generate_abstract(oct_result):
     for slice in oct_result:
         for obj in slice:
             if len(obj_list) == 0:
-                obj_list.append(OCTObject(obj['label'], obj['poly']))
+                obj_list.append(OCTObject(obj['label'], obj['poly'], obj['score']))
                 continue
 
-            for last_obj in obj_list:
-                if is_same_obj(last_obj, obj):
-                    last_obj.add_slice(obj['poly'])
-                else:
-                    archive_obj(last_obj)
-                    obj_list.remove(last_obj)
-                    obj_list.append(OCTObject(obj['label'], obj['poly']))
+            try_add_obj(obj)
+            cur_z = obj['poly'][4]
+            archive_list(cur_z)
 
     for obj in obj_list:
         archive_obj(obj)
 
+    js.do_cluster()
     abstract = f"{js}\n{jc}\n{xs}"
 
     with open("./OCT_Det/result/abstract.txt", 'w', encoding='utf-8') as f:

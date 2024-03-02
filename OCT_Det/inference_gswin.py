@@ -47,15 +47,14 @@ class OCTDetectModel:
         self.result_tuple = []
 
     def inference(self):
-        for img in tqdm(self.img_list[1:-1], desc='OCT处理进度', unit='img'):
+        for idx, img in enumerate(tqdm(self.img_list[1:-1], desc='OCT处理进度', unit='img')):
             result_tensor = inference_detector(self.model, img)
             self.result_tuple.append((img, result_tensor))
-            conv_result = conv2polygon(self.model, result_tensor, self.score_thr)
+            conv_result = conv2polygon(self.model, result_tensor, idx, self.score_thr)
             if len(conv_result) > 0:
                 self.result.append(conv_result)
 
     def save_results(self):
-        print(self.result)
         with open(os.path.join(result_path, 'result.json'), 'w') as json_file:
             json_file.write('')
             json.dump(self.result, json_file, indent=4, cls=NpEncoder)
