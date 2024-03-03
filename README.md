@@ -36,6 +36,16 @@ ChatOCT项目旨在将微调的LLM与现有的IVOCT检测模型结合，实现�
      ```
 
      API限额查询：https://gptbill.lonlie.cn/
+     
+5. 安装Apex（可以不装）
+
+     ```shell
+     git clone https://github.com/NVIDIA/apex
+     cd apex
+     python setup.py install
+     ```
+
+     
 
 ## 数据&权重
 

@@ -56,18 +56,22 @@ class JS(OCTClass):
             x, y, z = actual_position(x_avg, y_avg, z_avg)
             js_list.append([x, y, z, obj.score])
         points = np.array([[x, y, z] for x, y, z, _ in js_list])
-        print(js_list)
         dbscan = DBSCAN(eps=2, min_samples=1)
         labels = dbscan.fit_predict(points)
-        print(labels)
         self.clusters = [None] * (max(labels) + 1)
         for i, label in enumerate(labels):
             if self.clusters[label] is None:
                 self.clusters[label] = JS.Cluster()
             self.clusters[label].add_js(js_list[i])
 
+        tmp = []
+        for cluster in self.clusters:
+            if cluster.js_num > 3:
+                tmp.append(cluster)
+        self.clusters = tmp
+
     def __str__(self):
-        ret = f"发现巨噬细胞{len(self.clusters)}簇\n"
+        ret = f"检测到疑似巨噬细胞{len(self.clusters)}簇\n"
         for idx, cluster in enumerate(self.clusters):
             ret += f"第{idx + 1}簇"
             ret += str(cluster)
@@ -152,7 +156,7 @@ def generate_abstract(oct_result):
             return False
         last_x, last_y, last_z = last_obj.avg_position()
         x, y, z = get_position(obj['poly'])
-        if abs(last_x - x) > threshold or abs(last_y - y) > threshold:  # 无须比较z，因为archive_list控制了z差值必相邻
+        if abs(last_x - x) > threshold or abs(last_y - y) > threshold or last_z == z:  # 同一张切片的obj不做融合
             return False
         return True
 

@@ -16,7 +16,7 @@ gif_path = "./OCT_Det/result/result.gif"
 
 
 class OCTDetectModel:
-    def __init__(self, config, checkpoint, device="cpu", score_thr=0.3):
+    def __init__(self, config, checkpoint, device="cpu", score_thr=0.75):
         self.model = init_detector(config, checkpoint, device=device)
         self.score_thr = score_thr
         self.img_list = []
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--device', default='cuda:0', required=False, help='Device used for inference')
     parser.add_argument(
-        '--score-thr', type=float, default=0.3, required=False, help='bbox score threshold')
+        '--score-thr', type=float, default=0.75, required=False, help='bbox score threshold')
     args = parser.parse_args()
 
     model = OCTDetectModel(args.config, args.checkpoint, args.device, args.score_thr)

@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -351,7 +352,7 @@ class BBoxHead(nn.Module):
                 scale_factor = tuple([scale_factor])
             # B, 1, bboxes.size(-1)
             # FLAG
-            scale_factor = bboxes.new_tensor(scale_factor).unsqueeze(1).repeat(
+            scale_factor = bboxes.new_tensor(np.array(scale_factor)).unsqueeze(1).repeat(
                 1, 1,
                 bboxes.size(-1) // 4)
             bboxes /= scale_factor
