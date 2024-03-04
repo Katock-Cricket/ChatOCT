@@ -1,8 +1,10 @@
 import json
 import os
+import re
 from argparse import ArgumentParser
 from zipfile import ZipFile
 
+import torch.multiprocessing as mp
 from tqdm import tqdm
 
 from OCT_Det.utils import conv2polygon, resize_img, save_gif, NpEncoder
@@ -26,8 +28,22 @@ class OCTDetectModel:
         self.img_list = []
         self.result = {}
         self.result_tuple = []
+        self.progress_queue = mp.Queue()
 
     def load_oct(self, file):
+        def sort_by_frame(img_list):
+            frame_regex = r'frame(\d+)'
+
+            def frame_key(path):
+                match = re.search(frame_regex, path)
+                if match:
+                    return int(match.group(1))
+                else:
+                    return 0
+
+            sorted_img_list = sorted(img_list, key=frame_key)
+            return sorted_img_list
+
         # TODO: 在此处嵌入utils编解码模块，file可以是.mp4，pngs.zip，默认zip
         print("Loading file: ", file)
         self.oct_name = os.path.splitext(os.path.basename(file))[0]
@@ -37,6 +53,8 @@ class OCTDetectModel:
         os.mkdir(self.result_oct) if not os.path.exists(self.result_oct) else None
         self.result_img_path = os.path.join(self.result_oct, 'img')
         os.mkdir(self.result_img_path) if not os.path.exists(self.result_img_path) else None
+        self.result.update({'name': self.oct_name})
+        self.result.update({'result': []})
 
         if file.endswith('.zip'):
             with ZipFile(file, 'r') as zip_ref:
@@ -48,8 +66,7 @@ class OCTDetectModel:
                 self.img_list.append(img_path)
                 resize_img(img_path, 575)
 
-        self.result.update({'name': self.oct_name})
-        self.result.update({'result': []})
+        self.img_list = sort_by_frame(self.img_list)
         print("loaded_OCT:", self.img_list)
 
     def reset(self):
@@ -58,7 +75,6 @@ class OCTDetectModel:
         self.result_tuple = []
 
     def inference(self):
-
         for idx, img in enumerate(tqdm(self.img_list[1:-1], desc='OCT处理进度', unit='img')):
             result_tensor = inference_detector(self.model, img)
             self.result_tuple.append((img, result_tensor))

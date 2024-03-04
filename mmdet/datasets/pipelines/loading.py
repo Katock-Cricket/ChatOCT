@@ -193,14 +193,17 @@ class LoadImageAroundFile:
             id = idx + offset
             id = 0 if id < 0 else id
             id = 373 if id > 373 else id
-            try:
-                img_bytes = self.file_client.get(
-                    prefix + str(id) + '.png'
-                )
-            except:
-                img_bytes = self.file_client.get(
-                    prefix + str(idx) + '.png'
-                )
+            # try:
+            #     img_bytes = self.file_client.get(
+            #         prefix + str(id) + '.png'
+            #     )
+            # except:
+            #     img_bytes = self.file_client.get(
+            #         prefix + str(idx) + '.png'
+            #     )
+            img_bytes = self.file_client.get(
+                prefix + str(id) + '.png'
+            )
 
             img = mmcv.imfrombytes(
                 img_bytes, flag=self.color_type, channel_order=self.channel_order)
