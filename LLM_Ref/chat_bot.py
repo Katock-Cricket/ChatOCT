@@ -1,4 +1,6 @@
+import json
 import time
+from argparse import ArgumentParser
 
 from revChatGPT.V3 import Chatbot
 
@@ -15,7 +17,7 @@ class BaseBot:
     def chat(self, message: str, ref_record: str):
         pass
 
-    def ask_octet(self, message: str, ref_record: str):
+    def ask_oct(self, message: str, ref_record: str):
         pass
 
 
@@ -84,11 +86,30 @@ class GPTBot(BaseBot):
         else:
             ans = self.chat_with_gpt(message)
 
-        print(f"历史记录：\n{ref_record}\n当前提问：\n{message}\nGPT回答：\n{ans}\n")
+        # print(f"历史记录：\n{ref_record}\n当前提问：\n{message}\nGPT回答：\n{ans}\n")
         return ans
 
     def ask_oct(self, abstract: str, ref_record: str):
         message = f'{self.oct_prompt}\n{abstract}'
         ans = self.chat_with_gpt(message)
-        print(f"历史记录：\n{ref_record}\n当前提问：\n{message}\nGPT回答：\n{ans}\n")
+        # print(f"历史记录：\n{ref_record}\n当前提问：\n{message}\nGPT回答：\n{ans}\n")
         return ans
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--abstract-path', default="./OCT_Det/result/2019_Jul_18_13-29-42/2019_Jul_18_13-29-42.txt",
+                        required=False, help='Abstract path')
+    args = parser.parse_args()
+
+    ChatBot = GPTBot(
+        engine="gpt-3.5-turbo",
+        api_key=json.load(open('API_key.json', 'r', encoding='utf8'))['api_key'],
+        proxy="http://127.0.0.1:7890"
+    )
+    ChatBot.start()
+    print("ChatBot 初始化完毕")
+
+    with open(args.abstract_path, 'r', encoding='utf8') as f:
+        abstract = f.read()
+    print(ChatBot.ask_oct(abstract, ''))

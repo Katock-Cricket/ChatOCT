@@ -6,7 +6,6 @@ numpy
 six
 terminaltables
 timm
-apex
 opencv-python
 torch
 imageio

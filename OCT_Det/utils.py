@@ -17,9 +17,11 @@ def save_gif(img_dir, gif_path):
 
 
 def resize_img(img_path, size):
-        img = Image.open(img_path)
-        resized_img = img.resize((size, size), Image.ANTIALIAS)
-        resized_img.save(img_path)
+    img = Image.open(img_path)
+    if img.size == (size, size):
+        return
+    resized_img = img.resize((size, size), Image.ANTIALIAS)
+    resized_img.save(img_path)
 
 
 def conv2polygon(model, bbox_result, idx, score_thr):

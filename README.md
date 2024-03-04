@@ -21,8 +21,10 @@ ChatOCT项目旨在将微调的LLM与现有的IVOCT检测模型结合，实现�
      ```
 
 2. 安装mmcv（1.2.4~1.4.0）
-     使用源码自行构建：https://github.com/open-mmlab/mmcv/tree/v1.3.17
+     
 
+     mmcv老版本无预编译包，且硬件相关，使用源码自行构建：https://github.com/open-mmlab/mmcv/tree/v1.3.17
+     
 3. 安装mmdet（只能是该版本）
 
      ```

@@ -1,4 +1,5 @@
 import json
+import os.path
 
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -150,7 +151,7 @@ class OCTObject:
         return ret_x, ret_y, ret_z
 
 
-def generate_abstract(oct_result):
+def generate_abstract(result):
     def is_same_obj(last_obj, obj, threshold=25):  # 默认前后两帧的位置差距小于thr像素，则认为是同一个病灶
         if last_obj.label != obj['label']:
             return False
@@ -185,6 +186,9 @@ def generate_abstract(oct_result):
     jc = JC()
     xs = XS()
     obj_list = []
+    oct_name = result['name']
+    oct_result = result['result']
+
     for slice in oct_result:
         for obj in slice:
             if len(obj_list) == 0:
@@ -201,16 +205,17 @@ def generate_abstract(oct_result):
     js.do_cluster()
     abstract = f"{js}\n{jc}\n{xs}"
 
-    with open("./OCT_Det/result/abstract.txt", 'w', encoding='utf-8') as f:
+    with open(f"./OCT_Det/result/{oct_name}/{oct_name}.txt", 'w', encoding='utf-8') as f:
         f.write(abstract)
-        print("save abstract to ./result/abstract.txt")
+        print(f"save abstract to ./OCT_Det/result/{oct_name}/{oct_name}.txt")
 
     return abstract
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--result-path', default="./OCT_Det/result/result.json", required=False, help='Result path')
+    parser.add_argument('--result-path', default="./OCT_Det/result/2019_Jul_18_13-29-42/2019_Jul_18_13-29-42.json",
+                        required=False, help='Result path')
     args = parser.parse_args()
 
     with open(args.result_path, 'r') as f:
