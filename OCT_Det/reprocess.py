@@ -1,9 +1,8 @@
 import json
-import os.path
+from argparse import ArgumentParser
 
 import numpy as np
 from sklearn.cluster import DBSCAN
-from argparse import ArgumentParser
 
 
 class OCTClass:
@@ -25,7 +24,7 @@ class OCTClass:
             ret += f"最大截面积约占血管{rate * 100:.2f}%，"
             ret += f"长度约{obj.length:.2f}毫米，"
             ret += f"体积约{obj.volume:.2f}立方毫米\n"
-            ret += f"坐标：{obj.body}\n"
+            # ret += f"坐标：{obj.body}\n"
         return ret
 
 
@@ -165,12 +164,12 @@ def generate_abstract(result):
             return False
         return True
 
-    def archive_obj(obj):
+    def archive_obj(obj, num_thr=1):
         if obj.label == 'js':
             js.add_obj(obj)
-        elif obj.label == 'jc':
+        elif obj.label == 'jc' and len(obj.body) > num_thr:
             jc.add_obj(obj)
-        else:
+        elif obj.label == 'xs' and len(obj.body) > num_thr:
             xs.add_obj(obj)
 
     def try_add_obj(obj):
@@ -197,9 +196,9 @@ def generate_abstract(result):
         abstract = "没有检测到疑似病灶，一切正常"
     else:
         for slice in oct_result:
-            if len(slice) != 0:
-                cur_z = slice[0]['poly'][4]
-                archive_list(cur_z)
+            assert len(slice) != 0
+            cur_z = slice[0]['poly'][4]
+            archive_list(cur_z)
             for obj in slice:
                 if len(obj_list) == 0:
                     obj_list.append(OCTObject(obj['label'], obj['poly'], obj['score']))
@@ -221,7 +220,7 @@ def generate_abstract(result):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--result-path', default="./OCT_Det/result/2019_Jul_18_13-29-42/2019_Jul_18_13-29-42.json",
+    parser.add_argument('--result-path', default="./OCT_Det/result/2021_Jul_15_07-10-34/2021_Jul_15_07-10-34.json",
                         required=False, help='Result path')
     args = parser.parse_args()
 

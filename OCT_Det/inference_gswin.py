@@ -99,7 +99,7 @@ class OCTDetectModel:
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--oct', default="./demo/2019_Jul_18_13-29-42.zip", required=False, help='Image zip file')
+    parser.add_argument('--oct', default="./demo/2021_Jul_15_07-10-34.zip", required=False, help='Image zip file')
     parser.add_argument('--config', default="./configs/swin/gswin_oct.py", required=False, help='Config file')
     parser.add_argument('--checkpoint', default="./checkpoints/gswin_transformer.pth", required=False, help='Ckpt')
     parser.add_argument(
