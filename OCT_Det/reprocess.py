@@ -25,6 +25,7 @@ class OCTClass:
             ret += f"最大截面积约占血管{rate * 100:.2f}%，"
             ret += f"长度约{obj.length:.2f}毫米，"
             ret += f"体积约{obj.volume:.2f}立方毫米\n"
+            ret += f"坐标：{obj.body}\n"
         return ret
 
 
@@ -155,7 +156,7 @@ class OCTObject:
 
 
 def generate_abstract(result):
-    def is_same_obj(last_obj, obj, threshold=25):  # 默认前后两帧的位置差距小于thr像素，则认为是同一个病灶
+    def is_same_obj(last_obj, obj, threshold=50):  # 默认前后两帧的位置差距小于thr像素，则认为是同一个病灶
         if last_obj.label != obj['label'] or obj['label'] == 'js':  # 巨噬细胞不太可能连续
             return False
         last_x, last_y, last_z = last_obj.avg_position()
@@ -179,9 +180,9 @@ def generate_abstract(result):
                 return
         obj_list.append(OCTObject(obj['label'], obj['poly'], obj['score']))
 
-    def archive_list(cur_z):
+    def archive_list(cur_z, z_thr=5):
         for obj in obj_list:
-            if abs(obj.body[-1][4] - cur_z) > 2:  # 清除掉已经不可能连起来的切片，全部当做单独的obj
+            if abs(obj.body[-1][4] - cur_z) > z_thr:  # 清除掉已经不可能连起来的切片，全部当做单独的obj
                 archive_obj(obj)
                 obj_list.remove(obj)
 
@@ -196,14 +197,14 @@ def generate_abstract(result):
         abstract = "没有检测到疑似病灶，一切正常"
     else:
         for slice in oct_result:
+            if len(slice) != 0:
+                cur_z = slice[0]['poly'][4]
+                archive_list(cur_z)
             for obj in slice:
                 if len(obj_list) == 0:
                     obj_list.append(OCTObject(obj['label'], obj['poly'], obj['score']))
                     continue
-
                 try_add_obj(obj)
-                cur_z = obj['poly'][4]
-                archive_list(cur_z)
 
         for obj in obj_list:
             archive_obj(obj)
