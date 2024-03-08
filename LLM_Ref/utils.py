@@ -26,7 +26,7 @@ def info_list(topic_list):
     return info_base
 
 
-def query_range(query: str, k: int = 3, bar=0.6):
+def query_range(query: str, k: int = 3, bar=0.8):
     emb_d = pkl.load(open('LLM_Ref/MSD.pkl', 'rb'))
     embeddings = []
     for key, value in emb_d.items():
