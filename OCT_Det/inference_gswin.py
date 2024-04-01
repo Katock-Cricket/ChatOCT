@@ -18,7 +18,7 @@ result_path = "./OCT_Det/result"
 
 
 class OCTDetectModel:
-    def __init__(self, config, checkpoint, device="cpu", score_thr=0.75):
+    def __init__(self, config, checkpoint, device, score_thr=0.75):
         self.model = init_detector(config, checkpoint, device=device)
         self.score_thr = score_thr
         self.oct_name = ''

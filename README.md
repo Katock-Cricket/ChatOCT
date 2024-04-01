@@ -14,31 +14,40 @@ ChatOCT项目旨在将微调的LLM与现有的IVOCT检测模型结合，实现�
 
 ## 安装
 
-1. 依赖项
+1. 创建conda环境，安装Pytorch
 
+     项目运行环境：Windows11, Pytorch=1.13.1, CUDA=11.6, Python=3.9
+
+     ```shell
+     conda create -n chat-oct
+     conda install python=3.9
+     pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu116
      ```
+
+2. 安装其他依赖项
+
+     ```shell
+     pip install cython==0.29.33
      pip install -r requirements.txt
      ```
 
-2. 安装mmcv（1.2.4~1.4.0）
-     
+3. 安装mmcv-full=1.3.17
 
-     mmcv老版本无预编译包，且硬件相关，使用源码自行构建：https://github.com/open-mmlab/mmcv/tree/v1.3.17
-     
-3. 安装mmdet（只能是该版本）
+     ```shell
+     git clone https://github.com/open-mmlab/mmcv.git -b v1.3.17
+     cd mmcv
+     pip install -r requirements.txt
+     ```
+
+     然后参照[官方构建说明](https://github.com/open-mmlab/mmcv/blob/v1.3.17/docs_zh_CN/get_started/build.md)安装
+
+4. 安装mmdet=2.11.0
 
      ```
+     cd mmdet
      pip install -v -e .
      ```
 
-4. ChatGPT连通性测试
-
-     ```shell
-     python -m revChatGPT --V3 --api_key $API_KEY
-     ```
-
-     API限额查询：https://gptbill.lonlie.cn/
-     
 5. 安装Apex（可以不装）
 
      ```shell
