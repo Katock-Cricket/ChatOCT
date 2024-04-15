@@ -1,13 +1,13 @@
 import json
 import os
-import re
+
 from argparse import ArgumentParser
 from zipfile import ZipFile
 
 import torch.multiprocessing as mp
 from tqdm import tqdm
 
-from OCT_Det.utils import conv2polygon, resize_img, save_gif, NpEncoder
+from OCT_Det.utils import conv2polygon, resize_img, save_gif, NpEncoder, sort_by_frame
 from mmdet.apis import inference_detector, init_detector, show_result_pyplot
 
 from multiprocessing import Process
@@ -28,27 +28,13 @@ class OCTDetectModel:
         self.img_list = []
         self.result = {}
         self.result_tuple = []
-        self.progress_queue = mp.Queue()
 
     def load_oct(self, file):
-        def sort_by_frame(img_list):
-            frame_regex = r'frame(\d+)'
-
-            def frame_key(path):
-                match = re.search(frame_regex, path)
-                if match:
-                    return int(match.group(1))
-                else:
-                    return 0
-
-            sorted_img_list = sorted(img_list, key=frame_key)
-            return sorted_img_list
-
         # TODO: 在此处嵌入utils编解码模块，file可以是.mp4，pngs.zip，默认zip
         print("Loading file: ", file)
         self.oct_name = os.path.splitext(os.path.basename(file))[0]
         self.raw_oct = os.path.join(raw_path, self.oct_name)
-        os.mkdir(self.raw_oct) if not os.path.exists(self.raw_oct) else None
+
         self.result_oct = os.path.join(result_path, self.oct_name)
         os.mkdir(self.result_oct) if not os.path.exists(self.result_oct) else None
         self.result_img_path = os.path.join(self.result_oct, 'img')
@@ -56,7 +42,8 @@ class OCTDetectModel:
         self.result.update({'name': self.oct_name})
         self.result.update({'result': []})
 
-        if file.endswith('.zip'):
+        if (not os.path.exists(self.raw_oct)) and file.endswith('.zip'):  # exists then use raw file
+            os.mkdir(self.raw_oct)
             with ZipFile(file, 'r') as zip_ref:
                 zip_ref.extractall(self.raw_oct)
 
@@ -70,6 +57,13 @@ class OCTDetectModel:
         print("loaded_OCT:", self.img_list)
 
     def reset(self):
+        self.oct_name = ''
+        self.raw_oct = ''
+        self.result_oct = ''
+        self.result_img_path = ''
+        self.img_list = []
+        self.result = {}
+        self.result_tuple = []
         self.img_list = []
         self.result = {}
         self.result_tuple = []
@@ -87,19 +81,21 @@ class OCTDetectModel:
         with open(os.path.join(self.result_oct, f'{self.oct_name}.json'), 'w') as json_file:
             json_file.write('')
             json.dump(self.result, json_file, indent=4, cls=NpEncoder)
-            print(f"save result to: ./{self.result_oct}/{self.oct_name}.json")
+            print(f"save result to: {self.result_oct}/{self.oct_name}.json")
         # save png(slow)
         for (img, result) in self.result_tuple:
             show_result_pyplot(self.model, img, result, score_thr=self.score_thr,
                                outfile=os.path.join(self.result_img_path, os.path.basename(img)))
         # save gif
         save_gif(self.result_img_path, os.path.join(self.result_oct, f'{self.oct_name}.gif'))
-        print(f"save gif to: ./{self.result_oct}/{self.oct_name}.gif")
+        print(f"save gif to: {self.result_oct}/{self.oct_name}.gif")
+        return os.path.join(self.result_oct, f'{self.oct_name}.gif')
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--oct', default="./demo/2021_Jul_15_07-10-34.zip", required=False, help='Image zip file')
+    parser.add_argument('--all', default=True, action='store_true', required=False, help='infer all zips in demo')
+    parser.add_argument('--oct', default="./demo/2021_Jul_22_21-15-27.zip", required=False, help='Image zip file')
     parser.add_argument('--config', default="./configs/swin/gswin_oct.py", required=False, help='Config file')
     parser.add_argument('--checkpoint', default="./checkpoints/gswin_transformer.pth", required=False, help='Ckpt')
     parser.add_argument(
@@ -109,9 +105,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     model = OCTDetectModel(args.config, args.checkpoint, args.device, args.score_thr)
-    model.load_oct(args.oct)
-    model.inference()
-    p = Process(target=model.save_results)
-    p.start()
-    p.join()
-    model.reset()
+
+    if args.all:
+        for oct_file in os.listdir('./demo'):
+            oct_path = os.path.join('./demo', oct_file)
+            model.load_oct(oct_path)
+            model.inference()
+            p = Process(target=model.save_results)
+            p.start()
+            p.join()
+            model.reset()
+    else:
+        model.load_oct(args.oct)
+        model.inference()
+        p = Process(target=model.save_results)
+        p.start()
+        p.join()
+        model.reset()

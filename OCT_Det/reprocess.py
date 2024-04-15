@@ -1,4 +1,5 @@
 import json
+import os
 from argparse import ArgumentParser
 
 import numpy as np
@@ -14,6 +15,11 @@ class OCTClass:
     def add_obj(self, obj):
         self.obj_list.append(obj)
         self.num += 1
+
+    def del_single_instance(self, k):  # 去除只有k个切片的病灶，提高检测阈值的一个方式
+        for obj in self.obj_list:
+            if len(obj.body) <= k:
+                self.obj_list.remove(obj)
 
     def __str__(self):
         ret = f"检测到疑似{self.class_name}{self.num}处\n"
@@ -209,6 +215,8 @@ def generate_abstract(result):
             archive_obj(obj)
 
         js.do_cluster()
+        jc.del_single_instance(1)
+        xs.del_single_instance(1)
         abstract = f"{js}\n{jc}\n{xs}"
 
     with open(f"./OCT_Det/result/{oct_name}/{oct_name}.txt", 'w', encoding='utf-8') as f:
@@ -220,11 +228,21 @@ def generate_abstract(result):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--result-path', default="./OCT_Det/result/2021_Jul_15_07-10-34/2021_Jul_15_07-10-34.json",
-                        required=False, help='Result path')
+    parser.add_argument('--all', action='store_true', default=True, help='reprocess all results.json')
+    parser.add_argument('--result-name', default="2021_Jul_15_07-02-39",
+                        required=False, help='Result name')
     args = parser.parse_args()
 
-    with open(args.result_path, 'r') as f:
-        result = json.load(f)
+    if args.all:
+        for result_name in os.listdir('./OCT_Det/result'):
+            result_path = f'./OCT_Det/result/{result_name}/{result_name}.json'
+            with open(result_path, 'r') as f:
+                result = json.load(f)
 
-    abstract = generate_abstract(result)
+            abstract = generate_abstract(result)
+    else:
+        result_path = f'./OCT_Det/result/{args.result_name}/{args.result_name}.json'
+        with open(result_path, 'r') as f:
+            result = json.load(f)
+
+        abstract = generate_abstract(result)

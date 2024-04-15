@@ -1,9 +1,8 @@
 import json
-from multiprocessing import Process
 
 import gradio as gr
 
-from LLM_Ref.chat_bot import revGPTBot, OpenAIGPTBot
+from LLM_Ref.chat_bot import OpenAIGPTBot
 from OCT_Det.inference_gswin import OCTDetectModel
 from OCT_Det.reprocess import generate_abstract
 
@@ -11,15 +10,10 @@ device = "cuda:0"
 api_key = json.load(open('API_key.json', 'r', encoding='utf8'))['api_key']
 config = "./configs/swin/gswin_oct.py"
 checkpoint = "./checkpoints/gswin_transformer.pth"
-# ChatBot = revGPTBot(
-#     engine="gpt-3.5-turbo",
-#     api_key=api_key,
-#     proxy="http://127.0.0.1:7890"
-# )
 ChatBot = OpenAIGPTBot(
     engine="gpt-3.5-turbo",
     api_key=api_key,
-    proxy="http://127.0.0.1:7890"
+    base_url='https://api.chatanywhere.tech/v1'
 )
 OCTDetector = OCTDetectModel(config, checkpoint, device)
 
@@ -28,12 +22,11 @@ def analyse_oct(history, file):
     OCTDetector.reset()
     OCTDetector.load_oct(file.name)
     OCTDetector.inference()
-    Process(target=OCTDetector.save_results).start()
-    print('Another Process continue saving results...')
+    gif_path = OCTDetector.save_results()
     abstract = generate_abstract(OCTDetector.result)
     print("Abstract: ", abstract)
     history = history + [(abstract, None)]
-    return history
+    return history, gr.Image.update(value=gif_path, label='OCT检测结果', loop_animation=True)
 
 
 def launch_bot():
@@ -48,6 +41,13 @@ def chat_oct(history):
     history[-1][1] = response
 
     yield history
+
+
+def analyse_abstract(history, abstract_file):
+    with open(abstract_file.name, 'r', encoding='utf8') as f:
+        abstract = f.read()
+        history = history + [(abstract, None)]
+        return history
 
 
 def chat(history):
@@ -76,22 +76,22 @@ if __name__ == '__main__':
     """) as demo:
         with gr.Row():
             gr.HTML("""<h1 align="center">ChatOCT 开发测试</h1>""")
-            launch_btn = gr.Button("连接ChatGPT")
-
         with gr.Row():
-            with gr.Column(elem_id="col_container1"):
+            with gr.Column(elem_id='display', scale=2):
+                launch_btn = gr.Button("连接ChatGPT")
+                oct_file = gr.UploadButton(file_types=[".zip"], label="上传OCT")
+                abstract_file = gr.UploadButton(file_types=[".txt"], label="上传摘要")
+                gif = gr.Image(label='OCT检测结果')
+
+            with gr.Column(elem_id="col_container1", scale=8):
                 chatbot = gr.Chatbot(value=[(None, "ChatOCT Demo")], label="ChatOCT", elem_id='chatbot').style(
                     height=700)
-        with gr.Row():
-            with gr.Column(elem_id="col_container2", scale=0.7):
-                inputs = gr.Textbox(label="聊天框", placeholder="请输入文本")
-            with gr.Column(elem_id="col_container2", scale=0.15, min_width=0, height=100):
-                oct_file = gr.UploadButton(file_types=[".zip"], label="上传OCT", scale=1)
-            with gr.Column(elem_id="col_container2", scale=0.15, min_width=0):
                 with gr.Row():
-                    inputs_submit = gr.Button("发送")
-                with gr.Row():
-                    clean_btn = gr.Button("清空")
+                    with gr.Column(elem_id="col_container2", scale=6):
+                        inputs = gr.Textbox(label="聊天框", placeholder="请输入文本")
+                    with gr.Column(scale=1):
+                        inputs_submit = gr.Button("发送")
+                        clean_btn = gr.Button("清空")
 
         launch_btn.click(launch_bot)
 
@@ -101,7 +101,10 @@ if __name__ == '__main__':
         inputs_submit.click(add_text, [chatbot, inputs], [chatbot, inputs]).then(
             chat, [chatbot], [chatbot])
 
-        oct_file.upload(analyse_oct, [chatbot, oct_file], chatbot).then(
+        oct_file.upload(analyse_oct, [chatbot, oct_file], [chatbot, gif]).then(
+            chat_oct, [chatbot], [chatbot])
+
+        abstract_file.upload(analyse_abstract, [chatbot, abstract_file], chatbot).then(
             chat_oct, [chatbot], [chatbot])
 
         clean_btn.click(clean_data, [], [chatbot, inputs])

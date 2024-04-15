@@ -1,19 +1,35 @@
 import json
 import os
+import re
 
+import imageio.v2 as imageio
 import numpy as np
 from PIL import Image
 
 
+def sort_by_frame(img_list):
+    frame_regex = r'frame(\d+)'
+
+    def frame_key(path):
+        match = re.search(frame_regex, path)
+        if match:
+            return int(match.group(1))
+        else:
+            return 0
+
+    sorted_img_list = sorted(img_list, key=frame_key)
+    return sorted_img_list
+
+
 def save_gif(img_dir, gif_path):
-    images = []
-    for filename in sorted(os.listdir(img_dir)):
+    gif_frames = []
+    img_list = sort_by_frame(os.listdir(img_dir))
+    for filename in img_list:
         if filename.endswith('.png'):
             img_path = os.path.join(img_dir, filename)
-            img = Image.open(img_path)
-            images.append(img)
+            gif_frames.append(imageio.imread(img_path))
 
-    images[0].save(gif_path, save_all=True, append_images=images[1:], duration=100, loop=0)
+    imageio.mimsave(gif_path, gif_frames, 'GIF', duration=50)
 
 
 def resize_img(img_path, size):

@@ -157,3 +157,5 @@ API_Key.json
 /OCT_Det/result/
 /apex/
 /mmcv/
+/LLM_Ref/DISC-MedLLM/weights/
+/LLM_Ref/CareLlama/weights/

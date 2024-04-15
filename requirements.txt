@@ -12,6 +12,6 @@ pycocotools
 Pillow
 scikit-learn
 text2vec
-revChatGPT
 setuptools
 gradio==3.41.2
+openai
