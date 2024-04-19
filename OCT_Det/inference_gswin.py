@@ -107,18 +107,14 @@ if __name__ == '__main__':
     model = OCTDetectModel(args.config, args.checkpoint, args.device, args.score_thr)
 
     if args.all:
-        for oct_file in os.listdir('./demo'):
-            oct_path = os.path.join('./demo', oct_file)
+        for oct_file in os.listdir('demo'):
+            oct_path = os.path.join('demo', oct_file)
             model.load_oct(oct_path)
             model.inference()
-            p = Process(target=model.save_results)
-            p.start()
-            p.join()
+            model.save_results()
             model.reset()
     else:
         model.load_oct(args.oct)
         model.inference()
-        p = Process(target=model.save_results)
-        p.start()
-        p.join()
-        model.reset()
+        model.save_results()
+

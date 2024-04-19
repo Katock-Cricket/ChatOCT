@@ -159,3 +159,6 @@ API_Key.json
 /mmcv/
 /LLM_Ref/DISC-MedLLM/weights/
 /LLM_Ref/CareLlama/weights/
+/LLM_Ref/text2vec/
+/LLM_Ref/Huatuo2/weights/
+/checkpoints/

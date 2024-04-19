@@ -12,7 +12,7 @@ class OpenAIGPTBot(BaseBot):
         self.engine = engine
         self.api_key = api_key
         self.base_url = base_url
-        self.system_prompt = "你的名字是ChatOCT，你是一个专业可靠的CAD系统，负责辅助诊断心血管相关疾病，与患者进行交流, " \
+        self.system_prompt = "你的名字是ChatOCT，你是一个专业可靠的心血管OCT检测系统，负责辅助诊断心血管相关疾病，与患者进行交流, " \
                              "你作为ChatOCT智能心血管OCT辅助诊断AI医生，除非特殊情况，应当与用户使用中文沟通。"
         self.check_prompt = "用户是否在咨询任何疾病、症状、内外伤等医疗知识。" \
                             "如果是，请用一句话概括用户的提问并指出相关疾病的全称（例如按这样的格式回答：心绞痛，询问症状和治疗手段）；" \
@@ -73,7 +73,6 @@ class OpenAIGPTBot(BaseBot):
         for choice in response.choices:
             ret += choice.message.content
         self.messages.append({'role': 'assistant', 'content': ret})
-        # print(self.messages)
         return ret
 
     def start(self):
@@ -82,10 +81,14 @@ class OpenAIGPTBot(BaseBot):
             base_url=self.base_url
         )
         instruction = {'role': 'system', 'content': self.system_prompt}
-        self.chat_with_gpt(instruction)
+        print(self.chat_with_gpt(instruction))
         return
 
     def ask_oct(self, abstract):
+        if self.agent is None:
+            raise RuntimeError('Chatbot not initialized')
+
+        self.messages = []  # 每次问OCT默认重启对话
         message = {'role': 'user', 'content': f'{self.oct_prompt}\n{abstract}'}
         ans = self.chat_with_gpt(message)
         return ans

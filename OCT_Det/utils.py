@@ -27,9 +27,11 @@ def save_gif(img_dir, gif_path):
     for filename in img_list:
         if filename.endswith('.png'):
             img_path = os.path.join(img_dir, filename)
-            gif_frames.append(imageio.imread(img_path))
+            img = Image.open(img_path)
+            img_resized = img.resize((200, 200), Image.LANCZOS)
+            gif_frames.append(np.array(img_resized))
 
-    imageio.mimsave(gif_path, gif_frames, 'GIF', duration=50)
+    imageio.mimsave(gif_path, gif_frames, 'GIF', duration=100)
 
 
 def resize_img(img_path, size):

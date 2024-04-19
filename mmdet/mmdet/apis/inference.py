@@ -215,6 +215,6 @@ def show_result_pyplot(model,
         show=True,
         wait_time=wait_time,
         win_name=title,
-        bbox_color=(72, 101, 241),
-        text_color=(72, 101, 241),
+        bbox_color=(255, 255, 255),
+        text_color=(255, 255, 255),
         out_file=outfile)
