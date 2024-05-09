@@ -7,6 +7,7 @@ Huatuo_path = "LLM_Ref/Huatuo2/weights"
 
 class Huatuo2Bot(BaseBot):
     def __init__(self):
+        super().__init__()
         self.model = None
         self.engine = 'Huatuo2'
         self.tokenizer = None

@@ -7,11 +7,13 @@ from LLM_Ref.utils import get_ref
 
 
 class OpenAIGPTBot(BaseBot):
-    def __init__(self, engine: str, api_key: str, base_url: str):
+    def __init__(self, engine: str, api_key: str, base_url: str, retrival=True):
+        super().__init__()
         self.agent = None
         self.engine = engine
         self.api_key = api_key
         self.base_url = base_url
+        self.retrival = retrival
         self.system_prompt = "你的名字是ChatOCT，你是一个专业可靠的心血管OCT检测系统，负责辅助诊断心血管相关疾病，与患者进行交流, " \
                              "你作为ChatOCT智能心血管OCT辅助诊断AI医生，除非特殊情况，应当与用户使用中文沟通。"
         self.check_prompt = "用户是否在咨询任何疾病、症状、内外伤等医疗知识。" \
@@ -96,6 +98,9 @@ class OpenAIGPTBot(BaseBot):
     def chat(self, message):
         if self.agent is None:
             raise RuntimeError('Chatbot not initialized')
+        if not self.retrival:
+            return self.chat_with_gpt(message)
+
         checked_response = self.check_chat(f'{self.check_prompt}\n{message}')
         print(f"提炼用户关键词（是否有关疾病咨询）：{checked_response}")
         time.sleep(5)

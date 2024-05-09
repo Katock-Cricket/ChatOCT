@@ -2,16 +2,17 @@ import json
 
 import gradio as gr
 
-from LLM_Ref.chat_bot import OpenAIGPTBot
+from LLM_Ref.ChatGPT import OpenAIGPTBot
 from OCT_Det.inference_gswin import OCTDetectModel
 from OCT_Det.reprocess import generate_abstract
 
 device = "cuda:0"
-api_key = json.load(open('API_key.json', 'r', encoding='utf8'))['api_key']
+api_key = json.load(open('API_key.json', 'r', encoding='utf8'))['api_key_4']
 config = "./configs/swin/gswin_oct.py"
 checkpoint = "./checkpoints/gswin_transformer.pth"
 ChatBot = OpenAIGPTBot(
-    engine="gpt-3.5-turbo",
+    engine="gpt-4-turbo",
+    retrival=False,
     api_key=api_key,
     base_url='https://api.chatanywhere.tech/v1'
 )
@@ -26,7 +27,7 @@ def analyse_oct(history, file):
     abstract = generate_abstract(OCTDetector.result)
     print("Abstract: ", abstract)
     history = history + [(abstract, None)]
-    return history, gr.Image.update(value=gif_path, label='OCT检测结果', loop_animation=True)
+    return history, gr.Image.update(value=gif_path, label='OCT检测结果')
 
 
 def launch_bot():
@@ -75,11 +76,11 @@ if __name__ == '__main__':
     #chatbot {height: 770px;}
     """) as demo:
         with gr.Row():
-            gr.HTML("""<h1 align="center">ChatOCT 开发测试</h1>""")
+            gr.HTML("""<h1 align="center">ChatOCT V1.0</h1>""")
         with gr.Row():
             with gr.Column(elem_id='display', scale=2):
                 launch_btn = gr.Button("连接ChatGPT")
-                oct_file = gr.UploadButton(file_types=[".zip"], label="上传OCT")
+                oct_file = gr.UploadButton(file_types=[".zip"], label="上传IVOCT")
                 abstract_file = gr.UploadButton(file_types=[".txt"], label="上传摘要")
                 gif = gr.Image(label='OCT检测结果')
 

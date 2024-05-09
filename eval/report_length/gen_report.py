@@ -48,13 +48,15 @@ if __name__ == '__main__':
         ChatBot = OpenAIGPTBot(
             engine='gpt-3.5-turbo',
             api_key=json.load(open('API_key.json', 'r', encoding='utf8'))['api_key_3.5'],
-            base_url="https://api.chatanywhere.tech/v1"
+            base_url="https://api.chatanywhere.tech/v1",
+            retrival=True
         )
     elif args.engine == 'gpt4':
         ChatBot = OpenAIGPTBot(
             engine='gpt-4-turbo',
             api_key=json.load(open('API_key.json', 'r', encoding='utf8'))['api_key_4'],
-            base_url="https://api.chatanywhere.tech/v1"
+            base_url="https://api.chatanywhere.tech/v1",
+            retrival=False
         )
     elif args.engine == 'DISC_Med':
         ChatBot = DISCMedBot()
@@ -66,7 +68,7 @@ if __name__ == '__main__':
     ChatBot.start()
     result = {
         'engine': ChatBot.engine,
-        'results': []
+        'results': [],
     }
     for abstract in eval_list:
         single_result = eval_pipeline(ChatBot, abstract)
@@ -74,5 +76,5 @@ if __name__ == '__main__':
 
     with open(f'eval/report_length/result_{args.engine}.json', 'w', encoding='utf-8') as json_file:
         json_file.write('')
-        json.dump(result, json_file, indent=4, cls=NpEncoder, ensure_ascii=False)
+        json.dump(result, json_file, indent=4, ensure_ascii=False)
         print(f'saved results to result_{args.engine}.json')

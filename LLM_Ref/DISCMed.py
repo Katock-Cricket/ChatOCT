@@ -8,6 +8,7 @@ DISC_path = "LLM_Ref/DISC-MedLLM/weights"
 
 class DISCMedBot(BaseBot):
     def __init__(self):
+        super().__init__()
         self.model = None
         self.engine = 'DISC_Med'
         self.tokenizer = None
